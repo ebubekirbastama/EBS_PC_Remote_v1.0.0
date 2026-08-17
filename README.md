@@ -6,27 +6,27 @@
 ![Encryption](https://img.shields.io/badge/Channel-AES--GCM%20%2B%20ECDH-8A2BE2?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-v1.0.0-blue?style=for-the-badge)
 
-> Windows ↔ Windows LAN üzerinde uzak masaüstü, klavye/fare kontrolü, dosya aktarımı, ses ve kamera akışını sağlayan Python tabanlı bir PC Remote uygulaması.
+> Windows to Windows LAN üzerinde uzak masaüstü, klavye/fare kontrolü, dosya aktarımı, ses ve kamera akışını sağlayan Python tabanlı bir PC Remote uygulaması.
 
-## 📌 Proje Hakkında
+## Proje Hakkında
 
 **EBS PC Remote** aynı yerel ağ üzerindeki Windows bilgisayarların birbirini keşfetmesini ve kullanıcı onayı sonrasında uzaktan bağlantı kurmasını amaçlar.
 
-Uygulama; peer discovery, TCP kontrol bağlantısı, şifreli veri kanalı, ekran aktarımı, mouse/keyboard kontrolü, dosya transferi, ses ve kamera akışı gibi bileşenleri ayrı modüller halinde içerir. Ana giriş noktası Windows'ta yönetici yetkisini kontrol eder, firewall kurallarını hazırlar, kimlik bilgisini yükler, TCP sunucusunu ve LAN discovery servislerini başlatır. fileciteturn264file0
+Uygulama; peer discovery, TCP kontrol bağlantısı, şifreli veri kanalı, ekran aktarımı, mouse/keyboard kontrolü, dosya transferi, ses ve kamera akışı gibi bileşenleri ayrı modüller halinde içerir. Ana giriş noktası Windows'ta yönetici yetkisini kontrol eder, firewall kurallarını hazırlar, kimlik bilgisini yükler, TCP sunucusunu ve LAN discovery servislerini başlatır.
 
-## ✨ Özellikler
+## Özellikler
 
-### 🖥️ Uzak Masaüstü
+### Uzak Masaüstü
 
 - LAN üzerindeki bilgisayarları otomatik keşfetme
 - Uzak bilgisayarın ekranını JPEG kareleri halinde aktarma
 - 1080p'ye kadar ekran frame sınırı
-- Ayarlanabilir hedef FPS / JPEG kalitesi
+- Ayarlanabilir hedef FPS ve JPEG kalitesi
 - Ekran aktarımı için ayrı capture ve encode thread'leri
 
-Ekran yakalama `mss`, görüntü işleme/encoding ise OpenCV ve NumPy ile gerçekleştirilmektedir. Frame kuyruğu tek elemanlı tutularak eski karelerin birikmesi engellenmektedir. fileciteturn272file0
+Ekran yakalama `mss`, görüntü işleme ve encoding ise OpenCV ve NumPy ile gerçekleştirilir. Frame kuyruğu tek elemanlı tutularak eski karelerin birikmesi engellenir.
 
-### 🖱️ Klavye ve Fare Kontrolü
+### Klavye ve Fare Kontrolü
 
 Remote session içerisinde `pyautogui` kullanılarak:
 
@@ -39,9 +39,9 @@ Remote session içerisinde `pyautogui` kullanılarak:
 - Hotkey gönderimi
 - Metin yazma
 
-işlemleri uygulanabilmektedir. Koordinatlar uzak ekranın normalize edilmiş değerlerinden yerel ekran çözünürlüğüne dönüştürülür. fileciteturn271file0
+işlemleri uygulanabilir. Koordinatlar uzak ekranın normalize edilmiş değerlerinden yerel ekran çözünürlüğüne dönüştürülür.
 
-### 📁 Dosya Transferi
+### Dosya Transferi
 
 Dosya aktarımında:
 
@@ -50,43 +50,43 @@ Dosya aktarımında:
 3. Dosya parçalara ayrılarak aktarılır.
 4. Alıcı dosyayı kaydeder.
 5. Transfer sonunda SHA-256 karşılaştırması yapılır.
-6. Hash uyuşmazlığı durumunda `HASH HATASI` olarak raporlanır.
+6. Hash uyuşmazlığı durumunda transfer başarısız kabul edilir.
 
-Aynı isimli dosyalar üzerine yazılmak yerine `_1`, `_2` gibi isimlerle yeni dosya oluşturulur. fileciteturn271file0
+Aynı isimli dosyalar üzerine yazılmak yerine `_1`, `_2` gibi isimlerle yeni dosya oluşturulur.
 
-### 🔊 Ses
+### Ses
 
-`sounddevice` üzerinden 16 kHz, mono, 16-bit raw audio stream kullanılır. Ses paketleri güvenli session kanalı üzerinden `audio_chunk` mesajlarıyla taşınır. fileciteturn271file0
+`sounddevice` üzerinden 16 kHz, mono, 16-bit raw audio stream kullanılır. Ses paketleri güvenli session kanalı üzerinden `audio_chunk` mesajlarıyla taşınır.
 
-### 📷 Kamera
+### Kamera
 
 OpenCV ile varsayılan kamera açılır ve görüntü:
 
-- 960×540 boyutuna ölçeklenir
+- 960x540 boyutuna ölçeklenir
 - JPEG kalite 80 ile encode edilir
 - `camera_frame` mesajı olarak gönderilir
 
-Kamera akışı sonlandırıldığında kamera kaynağı serbest bırakılır. fileciteturn271file0
+Kamera akışı sonlandırıldığında kamera kaynağı serbest bırakılır.
 
-## 🔐 Güvenlik Mimarisi
+## Güvenlik Mimarisi
 
 Projenin önemli taraflarından biri LAN sınırlandırması ve şifreli session kanalının birlikte kullanılmasıdır.
 
 ### ECDH + HKDF
 
-Bağlantı kurulurken taraflar **SECP256R1 ECDH** anahtar çifti oluşturur. Ortak secret üzerinden SHA-256 kullanan HKDF ile 32 byte session key türetilir. fileciteturn268file0
+Bağlantı kurulurken taraflar **SECP256R1 ECDH** anahtar çifti oluşturur. Ortak secret üzerinden SHA-256 kullanan HKDF ile 32 byte session key türetilir.
 
 ### AES-GCM
 
-Session içerisindeki veri `AESGCM` ile şifrelenir. Paketlerde nonce ve artan counter kullanılır; alınan counter önceki değerden küçük/eşitse replay paketi reddedilir. Ayrıca paket boyutu için üst sınır uygulanır. fileciteturn268file0
+Session içerisindeki veri `AESGCM` ile şifrelenir. Paketlerde nonce ve artan counter kullanılır; alınan counter önceki değerden küçük veya eşitse replay paketi reddedilir. Ayrıca paket boyutu için üst sınır uygulanır.
 
 ### LAN Sınırı
 
-Discovery yalnızca private IPv4 adreslerini kabul eder. TCP sunucusu da bağlantının kaynak IP'sini private IPv4 olarak doğrular ve LAN dışındaki istemcileri reddeder. fileciteturn269file0turn270file0
+Discovery yalnızca private IPv4 adreslerini kabul eder. TCP sunucusu da bağlantının kaynak IP'sini private IPv4 olarak doğrular ve LAN dışındaki istemcileri reddeder.
 
-> **Önemli:** Bu mekanizmalar uygulamanın güvenlik tasarımını güçlendirir ancak tek başına kurumsal güvenlik değerlendirmesi veya bağımsız penetration test yerine geçmez.
+> Bu mekanizmalar uygulamanın güvenlik tasarımını güçlendirir ancak tek başına kurumsal güvenlik değerlendirmesi veya bağımsız penetration test yerine geçmez.
 
-## 🌐 Peer Discovery
+## Peer Discovery
 
 Bilgisayarlar UDP broadcast üzerinden `EBS_PC_REMOTE` magic değeriyle duyuru yayınlar.
 
@@ -98,57 +98,55 @@ Discovery paketinde:
 - Private IP
 - Control port
 
-bilgileri bulunur. Peer'ler belirli bir TTL sonrasında otomatik olarak listeden temizlenir. fileciteturn269file0
+bilgileri bulunur. Peer'ler belirli bir TTL sonrasında otomatik olarak listeden temizlenir.
 
-## 🔌 Ağ Mimarisi
+## Ağ Mimarisi
 
 ```text
                  EBS PC Remote LAN
-                         │
-          ┌──────────────┴──────────────┐
-          │                             │
+                         |
+          +--------------+--------------+
+          |                             |
        PC A                           PC B
-          │                             │
+          |                             |
     UDP Discovery                 UDP Discovery
-          │                             │
-          └───────────┬─────────────────┘
-                      │
-                TCP Control
-                      │
-               Accept / Reject
-                      │
-              ECDH + HKDF Key
-                      │
-                 AES-GCM
-                      │
-        ┌─────────────┼─────────────┐
-        ▼             ▼             ▼
+          |                             |
+          +------------+----------------+
+                       |
+                 TCP Control
+                       |
+                 Accept / Reject
+                       |
+                ECDH + HKDF Key
+                       |
+                    AES-GCM
+                       |
+        +--------------+--------------+
+        |              |              |
      Screen        Control       File/Media
-     Frames       Input          Transfer
+     Frames         Input          Transfer
 ```
 
-TCP sunucusu bağlantıyı kabul eder, peer onayından sonra ECDH anahtar değişimi gerçekleştirir ve `RemoteSession` oluşturur. fileciteturn270file0
+TCP sunucusu bağlantıyı kabul eder, peer onayından sonra ECDH anahtar değişimi gerçekleştirir ve `RemoteSession` oluşturur.
 
-## 🧰 Teknoloji Kartları
+## Teknoloji Kartları
 
 | Teknoloji | Kullanım |
 |---|---|
-| 🐍 **Python** | Ana programlama dili |
-| 🎨 **CustomTkinter** | Modern masaüstü arayüzü |
-| 🖥️ **mss** | Ekran yakalama |
-| 🖼️ **OpenCV** | Kamera ve JPEG görüntü işleme |
-| 🔢 **NumPy** | Görüntü/frame işlemleri |
-| 🖱️ **PyAutoGUI** | Mouse/keyboard kontrolü |
-| 🔊 **SoundDevice** | Ses capture/playback |
-| 🔐 **cryptography** | ECDH, HKDF, AES-GCM |
-| 📦 **PyInstaller** | Windows EXE oluşturma |
-| 📷 **qrcode[pil]** | QR kod desteği için bağımlılık |
-| 📋 **Pyperclip** | Clipboard işlemleri |
-| 📂 **tkinterdnd2** | Drag & drop desteği |
+| **Python** | Ana programlama dili |
+| **CustomTkinter** | Modern masaüstü arayüzü |
+| **mss** | Ekran yakalama |
+| **OpenCV** | Kamera ve JPEG görüntü işleme |
+| **NumPy** | Görüntü/frame işlemleri |
+| **PyAutoGUI** | Mouse/keyboard kontrolü |
+| **SoundDevice** | Ses capture/playback |
+| **cryptography** | ECDH, HKDF, AES-GCM |
+| **PyInstaller** | Windows EXE oluşturma |
+| **qrcode[pil]** | QR kod desteği için bağımlılık |
+| **Pyperclip** | Clipboard işlemleri |
+| **tkinterdnd2** | Drag & drop desteği |
 
-Mevcut `requirements.txt` dosyasında bu bağımlılıkların sürüm aralıkları tanımlıdır. fileciteturn265file0
-
-## 🏗️ Proje Yapısı
+## Proje Yapısı
 
 ```text
 EBS_PC_Remote_v1.0.0/
@@ -162,19 +160,17 @@ EBS_PC_Remote_v1.0.0/
 ├── ebs_pc_remote/
 │   ├── config.py
 │   ├── crypto_channel.py    # ECDH/HKDF/AES-GCM kanalı
-│   ├── discovery.py          # LAN peer discovery
-│   ├── firewall.py           # Windows Firewall yönetimi
-│   ├── media.py              # Screen streaming
-│   ├── network.py            # TCP server/client
-│   ├── session.py            # Remote session / file / media
-│   ├── ui.py                 # Kullanıcı arayüzü
+│   ├── discovery.py         # LAN peer discovery
+│   ├── firewall.py          # Windows Firewall yönetimi
+│   ├── media.py             # Screen streaming
+│   ├── network.py           # TCP server/client
+│   ├── session.py           # Remote session / file / media
+│   ├── ui.py                # Kullanıcı arayüzü
 │   └── util.py
 └── README.md
 ```
 
-Repository'deki gerçek dosya yapısında `assets`, `builder.py`, `main.py`, `requirements.txt`, batch başlangıç dosyaları ve `ebs_pc_remote` paketinin bu modülleri bulunuyor. fileciteturn263file0turn267file0
-
-## 🚀 Kurulum
+## Kurulum
 
 Windows üzerinde Python 3.x kurulu olmalıdır.
 
@@ -192,9 +188,9 @@ Ardından:
 python main.py
 ```
 
-Repository'de ayrıca `start_app.bat` ve builder için `start_builder.bat` dosyaları bulunur. fileciteturn263file0
+Repository'de ayrıca `start_app.bat` ve builder için `start_builder.bat` dosyaları bulunur.
 
-## 🏭 Windows EXE Oluşturma
+## Windows EXE Oluşturma
 
 Repository kendi GUI tabanlı builder'ını içerir.
 
@@ -202,7 +198,7 @@ Repository kendi GUI tabanlı builder'ını içerir.
 python builder.py
 ```
 
-Builder kaynak koduna göre:
+Builder:
 
 - İzole `.build_venv` oluşturur
 - pip/setuptools/wheel günceller
@@ -213,20 +209,20 @@ Builder kaynak koduna göre:
 - `--uac-admin` ile administrator manifest ekler
 - `customtkinter` ve `tkinterdnd2` içeriklerini toplar
 - mevcut `assets/ebs_pc_remote.ico` varsa EXE ikonunu kullanır
-- sonucu `dist/EBS_PC_Remote.exe` olarak üretir. fileciteturn266file0
+- sonucu `dist/EBS_PC_Remote.exe` olarak üretir
 
-## 🛡️ Windows Firewall
+## Windows Firewall
 
 Uygulama Windows'ta administrator olarak çalıştırılmaya çalışılır. Başlangıçta firewall hazırlığı yapılır.
 
-Kaynak koduna göre Private profile üzerinde:
+Private profile üzerinde:
 
-- **TCP control portu** için inbound allow rule
-- **UDP discovery portu** için inbound allow rule
+- TCP control portu için inbound allow rule
+- UDP discovery portu için inbound allow rule
 
-oluşturulur. Kurallar `netsh advfirewall` üzerinden eklenir ve önce aynı isimdeki eski kurallar silinir. fileciteturn273file0
+oluşturulur. Kurallar `netsh advfirewall` üzerinden eklenir ve önce aynı isimdeki eski kurallar silinir.
 
-## ⚠️ Güvenlik ve Yetkili Kullanım
+## Güvenlik ve Yetkili Kullanım
 
 Bu yazılım uzaktaki bilgisayarda **klavye/fare kontrolü, ekran görüntüsü, dosya transferi, ses ve kamera erişimi** sağlayabildiği için yüksek ayrıcalıklı bir araçtır.
 
@@ -240,9 +236,7 @@ Bu yazılım uzaktaki bilgisayarda **klavye/fare kontrolü, ekran görüntüsü,
 - EXE'yi güvenilmeyen kişilerle dağıtmayın.
 - Kaynak kodunda kimlik doğrulama/authorization katmanını genişletmeden kurumsal uzaktan erişim çözümü olarak kullanmayın.
 
-## ⚠️ Bilinen Teknik Sınırlamalar
-
-Kaynak kodu incelendiğinde:
+## Bilinen Teknik Sınırlamalar
 
 - Discovery ve bağlantı private IPv4/LAN odaklıdır.
 - TCP bağlantısı kurulmadan önce kullanıcı onayı mekanizması vardır.
@@ -253,7 +247,7 @@ Kaynak kodu incelendiğinde:
 - Ses 16 kHz mono raw stream olarak işlenir.
 - Session protokolü özel bir uygulama protokolüdür; standart RDP/VNC değildir.
 
-## 🛠️ Gelecek Geliştirmeler
+## Gelecek Geliştirmeler
 
 - Güçlü kullanıcı/cihaz kimlik doğrulaması
 - Pairing / trust store
@@ -269,17 +263,15 @@ Kaynak kodu incelendiğinde:
 - Otomatik güncelleme mekanizması
 - Test suite ve protocol integration tests
 
-## 📄 Lisans
+## Lisans
 
-Repository'deki `LICENSE` dosyasına bakınız. Repository'de bir lisans dosyası mevcut. fileciteturn263file0
+Repository'deki `LICENSE` dosyasına bakınız.
 
-## 👤 Geliştirici
+## Geliştirici
 
 **Ebubekir Bastama**  
-GitHub: [@ebubekirbastama](https://github.com/ebubekirbastama)
+GitHub: https://github.com/ebubekirbastama
 
 ---
 
-⭐ Projeyi faydalı bulduysanız repository'ye yıldız bırakabilirsiniz.
-
-> **EBS PC Remote v1.0.0** — Windows LAN remote desktop / remote assistance araştırma ve geliştirme projesi.
+**EBS PC Remote v1.0.0** - Windows LAN remote desktop / remote assistance araştırma ve geliştirme projesi.
